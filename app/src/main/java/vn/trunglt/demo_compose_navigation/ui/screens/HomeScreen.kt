@@ -12,6 +12,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -19,6 +20,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import vn.trunglt.democustomviewcompose.CameraPreviewScreen
 
 @Composable
@@ -28,6 +30,7 @@ fun HomeScreen(
     onSeeProfileClick: () -> Unit
 ) {
     println("recomposition HomeScreen")
+    val scope = rememberCoroutineScope()
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(key1 = lifecycleOwner) {
         println("run DisposableEffect")
@@ -92,6 +95,10 @@ fun HomeScreen(
             value = currentText,
             onValueChange = {
                 currentText = it
+                scope.launch {
+                    delay(2000)
+                    println("done launch $currentText without cancelling when recomposition")
+                }
             })
         TestOnly()
         LaunchedEffect(key1 = currentText) {
