@@ -7,12 +7,18 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
@@ -25,6 +31,7 @@ import androidx.navigation.compose.dialog
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.createGraph
 import androidx.navigation.toRoute
+import kotlinx.coroutines.delay
 import kotlinx.serialization.Serializable
 import vn.trunglt.demo_compose_navigation.ui.screens.ConfirmDialog
 import vn.trunglt.demo_compose_navigation.ui.screens.HomeScreen
@@ -111,15 +118,26 @@ fun App(modifier: Modifier = Modifier) {
             }
         }
     ) { innerPadding ->
+        var currentMillis by rememberSaveable {
+            mutableLongStateOf(System.currentTimeMillis())
+        }
+        LaunchedEffect(null) {
+            while (true) {
+                delay(1000)
+                currentMillis = System.currentTimeMillis()
+            }
+        }
         val navGraph = navController.createGraph(
             startDestination = Home,
             builder = {
                 composable<Home> { backstackEntry ->
-                    HomeScreen(onSeeProfileClick = {
-                        navController.navigate(
-                            route = createProfile()
-                        )
-                    })
+                    HomeScreen(
+                        currentMillis = currentMillis,
+                        onSeeProfileClick = {
+                            navController.navigate(
+                                route = createProfile()
+                            )
+                        })
                 }
                 composable<Profile> { backstackEntry ->
                     val profile: Profile = backstackEntry.toRoute()
@@ -157,11 +175,16 @@ fun App(modifier: Modifier = Modifier) {
                 }
             }
         )
-        NavHost(navController = navController, graph = navGraph, enterTransition = {
-            EnterTransition.None
-        }, exitTransition = {
-            ExitTransition.None
-        })
+        NavHost(
+            modifier = Modifier.padding(innerPadding),
+            navController = navController,
+            graph = navGraph,
+            enterTransition = {
+                EnterTransition.None
+            },
+            exitTransition = {
+                ExitTransition.None
+            })
     }
 }
 
