@@ -1,5 +1,6 @@
 package vn.trunglt.demo_compose_navigation.ui.screens
 
+import android.graphics.BitmapFactory
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,19 +11,26 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import vn.trunglt.demo_compose_navigation.MainApplication
+import vn.trunglt.demo_compose_navigation.data.image.ImageFileDataSourceImpl
+import vn.trunglt.demo_compose_navigation.data.image.ImageRepo
+import vn.trunglt.demo_compose_navigation.data.image.ImageRepoImpl
 import vn.trunglt.democustomviewcompose.CameraPreviewScreen
 
 @Composable
@@ -137,8 +145,20 @@ fun HomeScreen(
 
 @Composable
 fun TestOnly(modifier: Modifier = Modifier) {
-    println("recomposition Box Test")
+    println("recomposition TestOnly")
     Box {
         Text(text = "Test")
+    }
+}
+
+@Composable
+fun loadExternalImage(
+    imageRepo: ImageRepo = ImageRepoImpl(ImageFileDataSourceImpl(MainApplication.instance)),
+    url: String,
+): State<ImageBitmap?> {
+    println("recomposition loadExternalImage ${imageRepo.hashCode()}")
+    return produceState<ImageBitmap?>(initialValue = null) {
+        val bitmap = BitmapFactory.decodeFile(imageRepo.fetchImage(url))
+        value = bitmap.asImageBitmap()
     }
 }
