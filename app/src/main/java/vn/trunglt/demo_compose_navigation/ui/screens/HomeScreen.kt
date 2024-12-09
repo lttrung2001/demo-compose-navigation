@@ -10,9 +10,11 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -29,9 +31,10 @@ fun HomeScreen(
     currentMillis: Long,
     onSeeProfileClick: () -> Unit
 ) {
-    println("recomposition HomeScreen")
+//    println("recomposition HomeScreen")
     val scope = rememberCoroutineScope()
     val lifecycleOwner = LocalLifecycleOwner.current
+    // Test DisposableEffect
     DisposableEffect(key1 = lifecycleOwner) {
         println("run DisposableEffect")
         val observer = LifecycleEventObserver { source, event ->
@@ -95,16 +98,40 @@ fun HomeScreen(
             value = currentText,
             onValueChange = {
                 currentText = it
+                // Test rememberCoroutineScope
                 scope.launch {
                     delay(2000)
                     println("done launch $currentText without cancelling when recomposition")
                 }
             })
+        // Test checking skippable composable
         TestOnly()
+        // Test LaunchedEffect
         LaunchedEffect(key1 = currentText) {
             delay(10000)
             println("done LaunchedEffect $currentText")
         }
+        // If keys = null LaunchedEffect wont be cancelled and restart when composition
+        // Test rememberUpdatedState
+        // rememberUpdatedState + LaunchedEffect with null keys combination
+        // -> LaunchedEffect will not be cancelled when recomposition
+        // but also can use the latest value of rememberUpdatedState
+        val updatedState by rememberUpdatedState(newValue = currentText)
+        LaunchedEffect(key1 = null) {
+            println("start launchedEffect with key1 = null ${System.currentTimeMillis()}")
+            delay(10000)
+            println("test rememberUpdatedState currentText: $updatedState with millis: ${System.currentTimeMillis()}")
+        }
+        // Side effect will execute after successful recomposition
+        // This effect use to send newest data/state of composable to others (non-composable)
+        // Why we don't use LaunchedEffect? -> LaunchedEffect not ensure that it can send data to others
+        // because of coroutine can be cancelled when composable recomposition
+//        val analytics: FirebaseAnalytics = remember {
+//            FirebaseAnalytics()
+//        }
+//        SideEffect {
+//            analytics.setUserProperty("userType", user.userType)
+//        }
     }
 }
 
