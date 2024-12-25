@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
@@ -14,10 +15,9 @@ import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -36,6 +36,7 @@ import kotlinx.serialization.Serializable
 import vn.trunglt.demo_compose_navigation.ui.screens.ConfirmDialog
 import vn.trunglt.demo_compose_navigation.ui.screens.HomeScreen
 import vn.trunglt.demo_compose_navigation.ui.screens.ProfileScreen
+import vn.trunglt.demo_compose_navigation.ui.screens.RunOneLaunchedEffect
 import vn.trunglt.demo_compose_navigation.ui.theme.DemocomposenavigationTheme
 
 @Serializable
@@ -88,7 +89,9 @@ fun App(modifier: Modifier = Modifier) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         bottomBar = {
-            BottomNavigation {
+            BottomNavigation(
+                modifier = Modifier.navigationBarsPadding()
+            ) {
                 val navBackStackEntry = navController.currentBackStackEntry
                 val currentDestination = navBackStackEntry?.destination
                 topLevelRoutes.forEach { topLevelRoute ->
@@ -118,10 +121,10 @@ fun App(modifier: Modifier = Modifier) {
             }
         }
     ) { innerPadding ->
-        var currentMillis by rememberSaveable {
+        var currentMillis by remember {
             mutableLongStateOf(System.currentTimeMillis())
         }
-        LaunchedEffect(null) {
+        RunOneLaunchedEffect {
             while (true) {
                 delay(1000)
                 currentMillis = System.currentTimeMillis()
@@ -132,7 +135,6 @@ fun App(modifier: Modifier = Modifier) {
             builder = {
                 composable<Home> { backstackEntry ->
                     HomeScreen(
-                        currentMillis = currentMillis,
                         onSeeProfileClick = {
                             navController.navigate(
                                 route = createProfile()
@@ -143,6 +145,7 @@ fun App(modifier: Modifier = Modifier) {
                     val profile: Profile = backstackEntry.toRoute()
                     ProfileScreen(
                         profile = profile,
+                        currentMillis = currentMillis,
                         onProfileClick = {
                             navController.navigate(
                                 route = ConfirmDialog
@@ -155,6 +158,7 @@ fun App(modifier: Modifier = Modifier) {
                     val profile = Profile(profile2.shortFullName, profile2.company)
                     ProfileScreen(
                         profile = profile,
+                        currentMillis = currentMillis,
                         onProfileClick = {
 
                         }

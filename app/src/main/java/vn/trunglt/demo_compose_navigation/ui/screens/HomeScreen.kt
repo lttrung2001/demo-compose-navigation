@@ -10,13 +10,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -25,18 +23,16 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import vn.trunglt.demo_compose_navigation.MainApplication
-import vn.trunglt.demo_compose_navigation.data.image.ImageFileDataSourceImpl
+import kotlinx.coroutines.withContext
 import vn.trunglt.demo_compose_navigation.data.image.ImageRepo
-import vn.trunglt.demo_compose_navigation.data.image.ImageRepoImpl
 import vn.trunglt.democustomviewcompose.CameraPreviewScreen
 
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
-    currentMillis: Long,
     onSeeProfileClick: () -> Unit
 ) {
 //    println("recomposition HomeScreen")
@@ -113,23 +109,7 @@ fun HomeScreen(
                 }
             })
         // Test checking skippable composable
-        TestOnly()
-        // Test LaunchedEffect
-        LaunchedEffect(key1 = currentText) {
-            delay(10000)
-            println("done LaunchedEffect $currentText")
-        }
-        // If keys = null LaunchedEffect wont be cancelled and restart when composition
-        // Test rememberUpdatedState
-        // rememberUpdatedState + LaunchedEffect with null keys combination
-        // -> LaunchedEffect will not be cancelled when recomposition
-        // but also can use the latest value of rememberUpdatedState
-        val updatedState by rememberUpdatedState(newValue = currentText)
-        LaunchedEffect(key1 = null) {
-            println("start launchedEffect with key1 = null ${System.currentTimeMillis()}")
-            delay(10000)
-            println("test rememberUpdatedState currentText: $updatedState with millis: ${System.currentTimeMillis()}")
-        }
+        TestComposable()
         // Side effect will execute after successful recomposition
         // This effect use to send newest data/state of composable to others (non-composable)
         // Why we don't use LaunchedEffect? -> LaunchedEffect not ensure that it can send data to others
@@ -144,7 +124,7 @@ fun HomeScreen(
 }
 
 @Composable
-fun TestOnly(modifier: Modifier = Modifier) {
+fun TestComposable(modifier: Modifier = Modifier) {
     println("recomposition TestOnly")
     Box {
         Text(text = "Test")
@@ -153,12 +133,17 @@ fun TestOnly(modifier: Modifier = Modifier) {
 
 @Composable
 fun loadExternalImage(
-    imageRepo: ImageRepo = ImageRepoImpl(ImageFileDataSourceImpl(MainApplication.instance)),
+    imageRepo: ImageRepo,
     url: String,
 ): State<ImageBitmap?> {
-    println("recomposition loadExternalImage ${imageRepo.hashCode()}")
     return produceState<ImageBitmap?>(initialValue = null) {
-        val bitmap = BitmapFactory.decodeFile(imageRepo.fetchImage(url))
+        val bitmap = withContext(Dispatchers.IO) {
+            println("Fetch image")
+            BitmapFactory.decodeFile(imageRepo.fetchImage(url))
+        }
         value = bitmap.asImageBitmap()
+        awaitDispose {
+            println("Dispose image")
+        }
     }
 }
