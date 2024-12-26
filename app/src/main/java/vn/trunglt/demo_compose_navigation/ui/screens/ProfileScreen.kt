@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import kotlinx.coroutines.CoroutineScope
 import vn.trunglt.demo_compose_navigation.MainApplication
@@ -28,6 +29,10 @@ fun ProfileScreen(
     currentMillis: Long,
     onProfileClick: (Profile) -> Unit
 ) {
+    val bitmap by loadExternalImage(
+        imageRepo = ImageRepoImpl(ImageFileDataSourceImpl(MainApplication.instance)),
+        url = "https://eoimages.gsfc.nasa.gov/images/imagerecords/73000/73751/world.topo.bathy.200407.3x5400x2700.png"
+    )
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -40,10 +45,7 @@ fun ProfileScreen(
                 onProfileClick.invoke(profile)
             }
         )
-        val bitmap = loadExternalImage(
-            imageRepo = ImageRepoImpl(ImageFileDataSourceImpl(MainApplication.instance)),
-            url = "https://eoimages.gsfc.nasa.gov/images/imagerecords/73000/73751/world.topo.bathy.200407.3x5400x2700.png"
-        )
-        bitmap.value?.let { Image(bitmap = it, contentDescription = null) }
+
+        bitmap?.let { Image(bitmap = it, contentDescription = null) }
     }
 }

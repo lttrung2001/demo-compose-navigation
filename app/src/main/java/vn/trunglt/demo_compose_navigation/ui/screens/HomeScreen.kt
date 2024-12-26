@@ -1,6 +1,5 @@
 package vn.trunglt.demo_compose_navigation.ui.screens
 
-import android.graphics.BitmapFactory
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -28,7 +27,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import vn.trunglt.demo_compose_navigation.data.image.ImageRepo
+import vn.trunglt.demo_compose_navigation.data.image.decodeSampledBitmapFromFile
 import vn.trunglt.democustomviewcompose.CameraPreviewScreen
+import java.io.File
 
 @Composable
 fun HomeScreen(
@@ -139,11 +140,17 @@ fun loadExternalImage(
     return produceState<ImageBitmap?>(initialValue = null) {
         val bitmap = withContext(Dispatchers.IO) {
             println("Fetch image")
-            BitmapFactory.decodeFile(imageRepo.fetchImage(url))
+            decodeSampledBitmapFromFile(
+                file = File(imageRepo.fetchImage(url)),
+                reqWidth = 500,
+                reqHeight = 500,
+            )
         }
-        value = bitmap.asImageBitmap()
+        val imageBitmap = bitmap.asImageBitmap()
+        value = imageBitmap
         awaitDispose {
             println("Dispose image")
+//            bitmap.recycle()
         }
     }
 }
